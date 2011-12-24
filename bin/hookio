@@ -1,9 +1,41 @@
 #!/usr/bin/env node
-
 var Hook = require('../lib/hookio').Hook;
-
+var flatiron = require('flatiron'),
+    app = flatiron.app;
 var hook = new Hook( {
   name: 'the-hook'
 });
 
-hook.start();
+require('pkginfo')(module, 'version');
+
+app.version = exports.version;
+
+app.use(flatiron.plugins.cli, {
+  usage: [
+    'Cli for hookio',
+    '',
+    'app start - print a prompt and arguments',
+    'app search - print a prompt and arguments',
+    'app list - print a prompt and arguments'
+  ],
+  version: true
+});
+
+app.cmd('start', function () {
+  this.start = this.listen = this.connect = function(){};
+  hook["command::init"]();
+});
+  
+app.cmd('search', function () {
+  hook.start = hook.listen = hook.connect = function(){};
+  hook["command::search"]();
+});
+
+app.cmd('list', function() {
+  hook.on('hook::ready', function(){
+    hook["command::list"]();
+  });
+
+});
+
+app.start();
